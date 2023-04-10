@@ -30,11 +30,10 @@ export const deeplTranslate = async (
   const log = getLogger("api.translate.deepl");
 
   try {
-    log.debug(
-      `Execute deepl.translate(${query.sourceLanguage}>${
-        query.targetLanguage
-      }:${query.text.substring(0, 20)}...)`
-    );
+    const logText: string = `${query.sourceLanguage}>${
+      query.targetLanguage
+    } ${query.text.substring(0, 20)} …`;
+    log.debug(`Execute deepl.translate(${logText})`);
 
     const requestData: object = {
       auth_key: process.env.DEEPL_AUTH_KEY,
@@ -56,6 +55,7 @@ export const deeplTranslate = async (
         }
       )
       .then((response) => {
+        log.info(`tranlation by deepl succeeded for ${logText}`);
         return response.data;
       })
       .catch(function (error) {

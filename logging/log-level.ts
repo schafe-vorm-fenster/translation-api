@@ -1,8 +1,8 @@
 const logLevelData = {
   "*": "warn",
-  "api.translate": "debug",
-  "api.translate.cache": "debug",
-  "api.translate.deepl": "debug",
+  "api.translate": "info",
+  "api.translate.cache": "info",
+  "api.translate.deepl": "info",
 };
 
 export default logLevelData;

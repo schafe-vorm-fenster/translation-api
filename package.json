@@ -1,7 +1,15 @@
 {
   "name": "translation-api",
-  "description": "An API to translate content.",
-  "version": "0.0.1",
+  "description": "An API to translate content. The current version uses deepl.com as a translation provider.",
+  "version": "0.1.0",
+  "homepage": "https://translation.api.schafe-vorm-fenster.de/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schafe-vorm-fenster/translation-api"
+  },
+  "bugs": {
+    "url": "https://github.com/schafe-vorm-fenster/translation-api/issues"
+  },
   "author": {
     "name": "Jan-Henrik Hempel",
     "email": "jan@schafe-vorm-fenster.de"
@@ -17,7 +25,15 @@
     "test:watch": "jest --watch --maxWorkers=25%",
     "test:ci": "jest --runInBand --ci"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.4.0",
+    "@fortawesome/free-brands-svg-icons": "^6.4.0",
+    "@fortawesome/free-regular-svg-icons": "^6.4.0",
+    "@fortawesome/free-solid-svg-icons": "^6.4.0",
+    "@fortawesome/react-fontawesome": "^0.2.0",
     "axios": "^1.3.4",
     "axios-cache-interceptor": "^1.0.1",
     "cache-manager": "^4.1.0",
