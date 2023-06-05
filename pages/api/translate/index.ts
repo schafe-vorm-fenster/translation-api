@@ -2,10 +2,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import {
   DeeplTranslateQuery,
   DeeplTranslateResponse,
-} from "../../src/deepl/deeplTranslate";
-import { SupportedLanguages } from "../../src/deepl/supportedLanguages";
-import { deeplTranslateCached } from "../../src/deepl/deeplTranslateCached";
-import { getLogger } from "../../logging/log-util";
+} from "../../../src/deepl/deeplTranslate";
+import { SupportedLanguages } from "../../../src/deepl/supportedLanguages";
+import { deeplTranslateCached } from "../../../src/deepl/deeplTranslateCached";
+import { getLogger } from "../../../logging/log-util";
 
 /**
  * @swagger
@@ -14,14 +14,13 @@ import { getLogger } from "../../logging/log-util";
  *     summary: Translates a text by deepl.com.
  *     description:
  *     tags:
- *       - Vendor - DeepL API
+ *       - Translate
  *     produces:
  *       - application/json
  *     parameters:
  *       - name: sourcelanguage
  *         description: Source language as two character code.
  *         in: query
- *         required: true
  *         type: string
  *       - name: targetlanguage
  *         description: Target language as two character code.

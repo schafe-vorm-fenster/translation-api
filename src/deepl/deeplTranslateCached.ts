@@ -13,17 +13,19 @@ import { localCache, remoteDatabaseCache } from "../cache/cachemanager";
  * @returns DeeplTranslateResponse
  */
 const memoryCached = async (
-  query: DeeplTranslateQuery
+  query: DeeplTranslateQuery,
+  hash?: string
 ): Promise<DeeplTranslateResponse> => {
   const log = getLogger("api.translate.cache");
   try {
-    const cacheKey =
-      "deepl_translate_" +
-      query.sourceLanguage +
-      "-" +
-      query.targetLanguage +
-      "_" +
-      getUuidByString(query.text);
+    const cacheKey = hash
+      ? "deepl_translate_hash_" + hash
+      : "deepl_translate_" +
+        query.sourceLanguage +
+        "-" +
+        query.targetLanguage +
+        "_" +
+        getUuidByString(query.text);
     log.debug(`[Cache] Check local cache for ${cacheKey}.`);
     return localCache.wrap(cacheKey, function () {
       try {
@@ -44,8 +46,9 @@ const memoryCached = async (
 };
 
 export const deeplTranslateCached = async (
-  query: DeeplTranslateQuery
+  query: DeeplTranslateQuery,
+  hash?: string
 ): Promise<DeeplTranslateResponse> => {
   if (process.env.DEACTIVATE_CACHE === "true") return deeplTranslate(query);
-  return memoryCached(query);
+  return memoryCached(query, hash);
 };

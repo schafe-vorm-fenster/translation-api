@@ -2,6 +2,7 @@ import axios from "axios";
 import QueryString from "qs";
 import { SupportedLanguages } from "./supportedLanguages";
 import { getLogger } from "../../logging/log-util";
+import packageJson from "../../package.json" assert { type: "json" };
 
 export type DeeplTranslateQuery = {
   text: string;
@@ -50,6 +51,9 @@ export const deeplTranslate = async (
         QueryString.stringify(requestData),
         {
           headers: {
+            Authorization:
+              "DeepL-Auth-Key " + <string>process.env.DEEPL_AUTH_KEY,
+            "User-Agent": packageJson.name,
             "Content-Type": "application/x-www-form-urlencoded",
           },
         }
