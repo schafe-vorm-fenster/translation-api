@@ -4,7 +4,7 @@ import { SupportedLanguages } from "./supportedLanguages";
 import { getLogger } from "../../logging/log-util";
 import packageJson from "../../package.json" assert { type: "json" };
 
-export type DeeplTranslateQuery = {
+export type TranslateQuery = {
   text: string;
   sourceLanguage: SupportedLanguages;
   targetLanguage: SupportedLanguages;
@@ -19,15 +19,22 @@ type DeeplTranslateApiResponseItemShape = {
   detected_source_language: string;
   text: string;
 };
+
 type DeeplTranslateApiResponseShape = {
   translations: DeeplTranslateApiResponseItemShape[];
 };
 
-export type DeeplTranslateResponse = DeeplTranslateResponseData | null;
+export interface TranslateResponseData {
+  sourceLanguage: SupportedLanguages;
+  targetLanguage: SupportedLanguages;
+  text: string;
+}
+
+export type TranslateResponse = TranslateResponseData | null;
 
 export const deeplTranslate = async (
-  query: DeeplTranslateQuery
-): Promise<DeeplTranslateResponse> => {
+  query: TranslateQuery
+): Promise<TranslateResponse> => {
   const log = getLogger("api.translate.deepl");
 
   try {
@@ -60,7 +67,17 @@ export const deeplTranslate = async (
       )
       .then((response) => {
         log.info(`tranlation by deepl succeeded for ${logText}`);
-        return response.data;
+
+        const deeplResponse: DeeplTranslateApiResponseShape = response.data;
+        const translateResponse: TranslateResponseData = {
+          sourceLanguage: (
+            query.sourceLanguage ||
+            deeplResponse.translations[0].detected_source_language
+          ).toLowerCase() as SupportedLanguages,
+          targetLanguage: query.targetLanguage,
+          text: deeplResponse.translations[0].text,
+        };
+        return translateResponse;
       })
       .catch(function (error) {
         log.error(error);

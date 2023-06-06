@@ -1,7 +1,7 @@
 import {
   deeplTranslate,
-  DeeplTranslateQuery,
-  DeeplTranslateResponse,
+  TranslateQuery,
+  TranslateResponse,
 } from "./deeplTranslate";
 import { getLogger } from "../../logging/log-util";
 import getUuidByString from "uuid-by-string";
@@ -13,19 +13,17 @@ import { localCache, remoteDatabaseCache } from "../cache/cachemanager";
  * @returns DeeplTranslateResponse
  */
 const memoryCached = async (
-  query: DeeplTranslateQuery,
-  hash?: string
-): Promise<DeeplTranslateResponse> => {
+  query: TranslateQuery
+): Promise<TranslateResponse> => {
   const log = getLogger("api.translate.cache");
   try {
-    const cacheKey = hash
-      ? "deepl_translate_hash_" + hash
-      : "deepl_translate_" +
-        query.sourceLanguage +
-        "-" +
-        query.targetLanguage +
-        "_" +
-        getUuidByString(query.text);
+    const cacheKey =
+      "deepl_translate_" +
+      query.sourceLanguage +
+      "-" +
+      query.targetLanguage +
+      "_" +
+      getUuidByString(query.text);
     log.debug(`[Cache] Check local cache for ${cacheKey}.`);
     return localCache.wrap(cacheKey, function () {
       try {
@@ -46,9 +44,8 @@ const memoryCached = async (
 };
 
 export const deeplTranslateCached = async (
-  query: DeeplTranslateQuery,
-  hash?: string
-): Promise<DeeplTranslateResponse> => {
+  query: TranslateQuery
+): Promise<TranslateResponse> => {
   if (process.env.DEACTIVATE_CACHE === "true") return deeplTranslate(query);
-  return memoryCached(query, hash);
+  return memoryCached(query);
 };

@@ -20,6 +20,9 @@ export const localCache = cacheManager.caching({
  * Use for more or less static data.
  */
 const myConnection = mongoose.createConnection(process.env.MONGODB_URI);
+const cacheMaxAge: number = parseInt(
+  (process.env.CACHE_MAX_AGE as string) || "604800"
+); // 7 days
 export const remoteDatabaseCache = cacheManager.caching({
   store: mongooseStore,
   mongoose: mongoose,
@@ -29,7 +32,7 @@ export const remoteDatabaseCache = cacheManager.caching({
     collection: "MongooseCache", // mongodb collection name
     versionKey: false, // do not create __v field
   },
-  ttl: 604800, // 1 week
+  ttl: cacheMaxAge,
   isCacheableValue: function (value: any) {
     return value !== undefined && value !== null;
   },
