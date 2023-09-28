@@ -1,7 +1,7 @@
 {
   "name": "translation-api",
   "description": "An API to translate content. The current version uses deepl.com as a translation provider.",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "homepage": "https://translation.api.schafe-vorm-fenster.de/",
   "repository": {
     "type": "git",
