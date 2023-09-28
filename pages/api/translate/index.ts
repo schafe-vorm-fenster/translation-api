@@ -1,84 +1,25 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import {
-  TranslateQuery,
-  TranslateResponse,
-} from "../../../src/deepl/deeplTranslate";
-import { SupportedLanguages } from "../../../src/deepl/supportedLanguages";
-import { deeplTranslateCached } from "../../../src/deepl/deeplTranslateCached";
+
 import { getLogger } from "../../../logging/log-util";
-import { NextResponse } from "next/server";
-import { IncomingMessage, ServerResponse } from "http";
-import { canStale } from "axios-cache-interceptor";
+import { OpenAiTranslations } from "../../../src/openai/openAiTranslation.types";
+import { translateByOpenAiCached } from "../../../src/openai/translateByOpenAi.cached";
+
+type TranslateResponse = OpenAiTranslations | null;
 
 /**
  * @swagger
  * /api/translate:
- *   get:
- *     summary: Translates a text or markup. Uses GET to facilitate caching.
- *     description:
- *     tags:
- *       - Translate
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: sourcelanguage
- *         description: Source language as two character code.
- *         in: query
- *         type: string
- *       - name: targetlanguage
- *         description: Target language as two character code.
- *         in: query
- *         required: true
- *         type: string
- *       - name: text
- *         description: Text to be translated.
- *         in: query
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: Translated text.
- *         content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                sourceLanguage:
- *                  type: string
- *                  description: Language code of the source text, detected if not given.
- *                targetLanguage:
- *                  type: string
- *                  description: Language code of the translated text.
- *                text:
- *                  type: string
- *                  description: Translated text.
- *       204:
- *         description: Could not receive a translated text.
- *       400:
- *         description: Missing identifier. Please provide a text and a target language.
- *
- * @swagger
- * /api/translate:
  *   post:
- *     summary: Translates a text or markup.
+ *     summary: Translates content from text, json or markup.
  *     description:
  *     tags:
  *       - Translate
  *     produces:
  *       - application/json
  *     parameters:
- *       - name: sourcelanguage
- *         description: Source language as two character code.
- *         in: query
- *         type: string
- *       - name: targetlanguage
- *         description: Target language as two character code.
- *         in: query
- *         required: true
- *         type: string
  *       - name: text
- *         description: Text to be translated.
- *         in: query
+ *         description: Text, Json or Markup to be translated.
+ *         in: body
  *         required: true
  *         type: string
  *     responses:
@@ -88,20 +29,11 @@ import { canStale } from "axios-cache-interceptor";
  *          application/json:
  *            schema:
  *              type: object
- *              properties:
- *                sourceLanguage:
- *                  type: string
- *                  description: Language code of the source text, detected if not given.
- *                targetLanguage:
- *                  type: string
- *                  description: Language code of the translated text.
- *                text:
- *                  type: string
- *                  description: Translated text.
  *       204:
  *         description: Could not receive a translated text.
  *       400:
  *         description: Missing identifier. Please provide a text and a target language.
+ *       404: Could not receive a translated text.
  */
 export default async function handler(
   req: NextApiRequest,
@@ -109,48 +41,24 @@ export default async function handler(
 ) {
   const log = getLogger("api.translate");
 
-  let sourcelanguage: SupportedLanguages | undefined = undefined;
-  let targetlanguage: SupportedLanguages | undefined = undefined;
-  let text: string | undefined = undefined;
+  const content: string | undefined = req.body;
+  log.debug({ body: req.body }, "req.body");
 
-  if (req.method === "GET") {
-    sourcelanguage = req.query.sourcelanguage as SupportedLanguages;
-    targetlanguage = req.query.targetlanguage as SupportedLanguages;
-    text = req.query.text as string;
-  } else if (req.method === "POST") {
-    sourcelanguage = req.query.sourcelanguage as SupportedLanguages;
-    targetlanguage = req.query.targetlanguage as SupportedLanguages;
-    text = req.body as string;
-  }
-
-  if (!text || !targetlanguage)
+  if (!content || content.length <= 5)
     return res.status(400).json({
-      message:
-        "Missing identifier. Please provide a text and a target language.",
+      status: 400,
+      message: "Missing body. Please provide content as body.",
     });
 
-  const query: TranslateQuery = {
-    text: <string>text,
-    sourceLanguage: <SupportedLanguages>sourcelanguage,
-    targetLanguage: <SupportedLanguages>targetlanguage,
-  };
-
-  const data: TranslateResponse = await deeplTranslateCached(query);
+  const data: OpenAiTranslations | null = await translateByOpenAiCached({
+    query: content,
+  });
 
   if (!data)
     return res
-      .status(204)
-      .json({ message: "Could not receive a translated text." });
+      .status(404)
+      .json({ status: 404, message: "Could not receive a translated text." });
 
-  // add cache header to allow cdn caching of responses
-  const cacheMaxAge: string = process.env.CACHE_MAX_AGE || "604800"; // 7 days
-  const cacheStaleWhileRevalidate: string =
-    process.env.CACHE_STALE_WHILE_REVALIDATE || "120"; // 2 minutes
-
-  res.setHeader(
-    "Cache-Control",
-    `max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, stale-while-revalidate=${cacheStaleWhileRevalidate}`
-  );
   res.setHeader("Content-Type", "application/json");
   return res.status(200).json(data);
 }
